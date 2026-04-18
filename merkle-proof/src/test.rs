@@ -8,5 +8,4 @@ fn test() {
     let env = Env::default();
     let contract_id = env.register(MerkleProof, ());
     let client = MarkleProofClient::new(&env, &contract_id);
-
 }
