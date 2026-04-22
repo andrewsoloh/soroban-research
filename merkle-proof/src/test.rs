@@ -1,5 +1,4 @@
 #![cfg(test)]
-
 use super::*;
 use soroban_sdk::{vec, Env, String};
 
@@ -7,5 +6,5 @@ use soroban_sdk::{vec, Env, String};
 fn test() {
     let env = Env::default();
     let contract_id = env.register(MerkleProof, ());
-    let client = MarkleProofClient::new(&env, &contract_id);
+    let client = MerkleProofClient::new(&env, &contract_id);
 }
