@@ -2,10 +2,10 @@
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
 #[contract]
-pub struct AddressStorage;
+pub struct AddressVerify;
 
 #[contractimpl]
-impl AddressStorage {
+impl AddressVerify {
     pub fn address_verify(env: Env, address: Address) -> Address {
         address.require_auth();
         env.storage().persistent().set(&address, &true);
