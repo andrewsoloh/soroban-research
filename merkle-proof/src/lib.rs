@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contracterror, contractimpl, Bytes, Env, Symbol, Vec};
+use soroban_sdk::{contract, contracterror, contractimpl, Bytes, BytesN, Env, Symbol, Vec};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -17,34 +17,40 @@ impl MerkleProof {
         let root = Symbol::new(&env, "root");
         root
     }
-    pub fn __constructor(env: Env, root: Bytes) -> Result<(), MerkleError> {
+    pub fn __constructor(env: Env, root: BytesN<32>) -> Result<(), MerkleError> {
         env.storage().persistent().set(&Self::root(env), &root);
         Ok(())
     }
     pub fn verify(
         env: Env,
-        leaf: Bytes,
-        proof: Vec<Bytes>,
+        leaf: BytesN<32>,
+        proof: Vec<BytesN<32>>,
         indices: Vec<bool>,
     ) -> Result<(), MerkleError> {
         let mut current = leaf;
         for (hash, is_left) in proof.iter().zip(indices.iter()) {
             match is_left {
                 true => {
-                    let mut sibling = hash;
-                    sibling.append(&mut current);
-                    let parent = env.crypto().sha256(&sibling);
-                    current = parent.to_bytes().into_bytes();
+                    let sibling = hash;
+                    let mut bytes_sibling = Bytes::from(&sibling);
+                    let bytes_current = Bytes::from(&current);
+                    bytes_sibling.append(&bytes_current);
+
+                    let parent = env.crypto().sha256(&bytes_sibling);
+                    current = parent.into();
                 }
                 false => {
-                    let mut sibling = hash;
-                    current.append(&mut sibling);
-                    let parent = env.crypto().sha256(&current);
-                    current = parent.to_bytes().into_bytes();
+                    let sibling = hash;
+                    let bytes_sibling = Bytes::from(&sibling);
+                    let mut bytes_current = Bytes::from(&current);
+                    bytes_current.append(&bytes_sibling);
+
+                    let parent = env.crypto().sha256(&bytes_current);
+                    current = parent.into();
                 }
             }
         }
-        let root = env
+        let root: BytesN<32> = env
             .storage()
             .persistent()
             .get(&Self::root(env))
