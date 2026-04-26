@@ -8,6 +8,7 @@ pub enum MerkleError {
     VerifyFailed = 1,
     RootNotSet = 2,
 }
+
 #[contract]
 pub struct MerkleProof;
 
@@ -17,17 +18,26 @@ impl MerkleProof {
         let root = Symbol::new(&env, "root");
         root
     }
+
     pub fn __constructor(env: Env, root: BytesN<32>) -> Result<(), MerkleError> {
         env.storage().persistent().set(&Self::root(env), &root);
         Ok(())
     }
+
     pub fn verify(
         env: Env,
         leaf: BytesN<32>,
         proof: Vec<BytesN<32>>,
         indices: Vec<bool>,
     ) -> Result<(), MerkleError> {
-        let mut current = leaf;
+        let prefix = BytesN::from_array(&env, &[0x00; 1]);
+        let mut prefix_bytes: Bytes = prefix.to_bytes();
+        let leaf_bytes: Bytes = leaf.to_bytes();
+        prefix_bytes.append(&leaf_bytes);
+
+        let lief_hash = env.crypto().sha256(&prefix_bytes);
+        let lief_bytes: BytesN<32> = lief_hash.to_bytes();
+        let mut current = lief_bytes;
         for (hash, is_left) in proof.iter().zip(indices.iter()) {
             match is_left {
                 true => {
@@ -36,7 +46,10 @@ impl MerkleProof {
                     let bytes_current = Bytes::from(&current);
                     bytes_sibling.append(&bytes_current);
 
-                    let parent = env.crypto().sha256(&bytes_sibling);
+                    let prefix = BytesN::from_array(&env, &[0x01; 1]);
+                    let mut prefix_bytes: Bytes = prefix.to_bytes();
+                    prefix_bytes.append(&bytes_sibling);
+                    let parent = env.crypto().sha256(&prefix_bytes);
                     current = parent.into();
                 }
                 false => {
@@ -45,7 +58,10 @@ impl MerkleProof {
                     let mut bytes_current = Bytes::from(&current);
                     bytes_current.append(&bytes_sibling);
 
-                    let parent = env.crypto().sha256(&bytes_current);
+                    let prefix = BytesN::from_array(&env, &[0x01; 1]);
+                    let mut prefix_bytes: Bytes = prefix.to_bytes();
+                    prefix_bytes.append(&bytes_current);
+                    let parent = env.crypto().sha256(&prefix_bytes);
                     current = parent.into();
                 }
             }
@@ -62,4 +78,5 @@ impl MerkleProof {
         }
     }
 }
+
 mod test;
