@@ -15,8 +15,7 @@ pub struct MerkleProof;
 #[contractimpl]
 impl MerkleProof {
     pub fn root(env: Env) -> Symbol {
-        let root = Symbol::new(&env, "root");
-        root
+        Symbol::new(&env, "root")
     }
 
     pub fn __constructor(env: Env, root: BytesN<32>) -> Result<(), MerkleError> {
@@ -35,15 +34,15 @@ impl MerkleProof {
         let leaf_bytes: Bytes = leaf.to_bytes();
         prefix_bytes.append(&leaf_bytes);
 
-        let lief_hash = env.crypto().sha256(&prefix_bytes);
-        let lief_bytes: BytesN<32> = lief_hash.to_bytes();
-        let mut current = lief_bytes;
+        let leaf_hash = env.crypto().sha256(&prefix_bytes);
+        let leaf_bytes_n: BytesN<32> = leaf_hash.to_bytes();
+        let mut current = leaf_bytes_n;
         for (hash, is_left) in proof.iter().zip(indices.iter()) {
             match is_left {
                 true => {
                     let sibling = hash;
-                    let mut bytes_sibling = Bytes::from(&sibling);
-                    let bytes_current = Bytes::from(&current);
+                    let mut bytes_sibling: Bytes = sibling.to_bytes();
+                    let bytes_current: Bytes = current.to_bytes();
                     bytes_sibling.append(&bytes_current);
 
                     let prefix = BytesN::from_array(&env, &[0x01; 1]);
@@ -54,8 +53,8 @@ impl MerkleProof {
                 }
                 false => {
                     let sibling = hash;
-                    let bytes_sibling = Bytes::from(&sibling);
-                    let mut bytes_current = Bytes::from(&current);
+                    let bytes_sibling: Bytes = sibling.to_bytes();
+                    let mut bytes_current: Bytes = current.to_bytes();
                     bytes_current.append(&bytes_sibling);
 
                     let prefix = BytesN::from_array(&env, &[0x01; 1]);
@@ -72,7 +71,7 @@ impl MerkleProof {
             .get(&Self::root(env))
             .ok_or(MerkleError::RootNotSet)?;
         if current == root {
-            return Ok(());
+            Ok(())
         } else {
             Err(MerkleError::VerifyFailed)
         }
