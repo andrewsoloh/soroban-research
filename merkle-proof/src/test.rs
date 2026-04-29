@@ -33,9 +33,13 @@ fn test() {
     let leaf = BytesN::from_array(&env, &[2; 32]);
     let proof = BytesN::from_array(&env, &[16; 32]);
     let proof_list = vec![&env, proof];
+    let proof_empty: Vec<BytesN<32>> = vec![&env];
 
     assert_eq!(client.verify(&leaf, &proof_list, &vec![&env, true]), ());
     assert!(client
-        .try_verify(&leaf, &proof_list, &vec![&env, false])
+        .try_verify(&leaf, &proof_empty, &vec![&env, true])
+        .is_err());
+    assert!(client
+        .try_verify(&leaf, &proof_list, &vec![&env, true, true])
         .is_err());
 }

@@ -7,6 +7,8 @@ use soroban_sdk::{contract, contracterror, contractimpl, Bytes, BytesN, Env, Sym
 pub enum MerkleError {
     VerifyFailed = 1,
     RootNotSet = 2,
+    EmptyProof = 3,
+    ProofIndicesDifferentLength = 4,
 }
 
 #[contract]
@@ -29,6 +31,13 @@ impl MerkleProof {
         proof: Vec<BytesN<32>>,
         indices: Vec<bool>,
     ) -> Result<(), MerkleError> {
+        if proof.is_empty() {
+            return Err(MerkleError::EmptyProof);
+        }
+        if proof.len() != indices.len() {
+            return Err(MerkleError::ProofIndicesDifferentLength);
+        }
+
         let prefix = BytesN::from_array(&env, &[0x00; 1]);
         let mut prefix_bytes: Bytes = prefix.to_bytes();
         let leaf_bytes: Bytes = leaf.to_bytes();
