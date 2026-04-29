@@ -13,8 +13,7 @@ impl AddressVerify {
     }
 
     pub fn get_address(env: Env, address: Address) -> bool {
-        let verified = env.storage().persistent().get(&address).unwrap_or(false);
-        verified
+        env.storage().persistent().get(&address).unwrap_or(false)
     }
 }
 
