@@ -58,7 +58,7 @@ impl MerkleProof {
                     let mut prefix_bytes: Bytes = prefix.to_bytes();
                     prefix_bytes.append(&bytes_sibling);
                     let parent = env.crypto().sha256(&prefix_bytes);
-                    current = parent.into();
+                    current = parent.to_bytes();
                 }
                 false => {
                     let sibling = hash;
@@ -70,7 +70,7 @@ impl MerkleProof {
                     let mut prefix_bytes: Bytes = prefix.to_bytes();
                     prefix_bytes.append(&bytes_current);
                     let parent = env.crypto().sha256(&prefix_bytes);
-                    current = parent.into();
+                    current = parent.to_bytes();
                 }
             }
         }
